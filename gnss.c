@@ -351,7 +351,7 @@ int status = tcgetattr(td, &newt); // get the serial port settings from the term
   {
      perror("tcflush");
   }
-
+return td;
 }
 
 int NtripSocketInit(char *host,char *httpreq){
