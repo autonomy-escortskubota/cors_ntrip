@@ -89,7 +89,7 @@ FILE *gnss_log(){
     FILE *file = fopen(filename, "w");
     if (file == NULL) {
         fprintf(stderr, "Could not open %s for writing\n", filename);
-        
+        fclose(file);
     }
     return file;
 
@@ -100,7 +100,7 @@ void write_json_to_file(char const * fil,char *timj,double latj, double lngj,dou
     FILE *file = fopen(fil, "w");
     if (file == NULL) {
         fprintf(stderr, "Could not open %s for writing\n", fil);
-        
+        fclose(file);
     }
 
 
@@ -117,11 +117,13 @@ cJSON *monitor = cJSON_CreateObject();
     cJSON_AddNumberToObject(monitor,"Differential Age", gga_diff_agej);
     cJSON_AddNumberToObject(monitor,"Date", datj);
     cJSON_AddNumberToObject(monitor,"NTRIP Station ID", d_sat);
-
-    
-
     char *json_string = cJSON_Print(monitor);
-    printf("%s \n",json_string);
+    if (file != NULL) {
+        fputs(json_string, file);
+        fclose(file);
+    } else {
+        perror("Error opening file");
+    }
     fprintf(file, "%s", json_string);
     
 
@@ -273,15 +275,14 @@ void log_json_to_file(FILE *file_ptr,char *timj,double latj, double lngj,double 
     cJSON_AddNumberToObject(monitor,"Differential Age", gga_diff_agej);
     cJSON_AddNumberToObject(monitor,"Date", datj);
     cJSON_AddNumberToObject(monitor,"NTRIP Station ID", d_sat);
-
-    
-
     char *json_string = cJSON_Print(monitor);
-    printf("%s \n",json_string);
+    if (file_ptr != NULL) {
+        fputs(json_string, file_ptr);
+        //fclose(file_ptr);
+    } else {
+        perror("Error opening file");
+    }
     fprintf(file_ptr, "%s", json_string);
-    
-
-    
     cJSON_Delete(monitor);
     free(json_string);
 }

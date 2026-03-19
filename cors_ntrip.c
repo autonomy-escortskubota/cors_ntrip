@@ -16,6 +16,7 @@ pthread_mutex_t buffer_mutex = PTHREAD_MUTEX_INITIALIZER;
 void NTRIP_json_to_file(char const * fil,char *gga);
 cJSON *parse_json_file(const char *filename);
 char *read_file(const char *filename);
+void ntrip_gga(int portd,const char* jsfi);
 // Define the host and the request
 char *hst = "qrtksa1.quectel.com";   
 // The HTTP request string must end with a double CRLF ("\r\n\r\n") to signify 
@@ -29,37 +30,14 @@ void *ntrip_dev(void *arg){
     wprt = init_ntrip_write_port(DEVICE);
     sckfd = NtripSocketInit(hst,get_request);
      // 5. Read the server response (which includes HTTP response headers and body)
-     cJSON *json_data = parse_json_file("ntrip_gga.json"); // Example filename
-     if (json_data != NULL) {
-        // Accessing a number item:
-        cJSON *gga_item = cJSON_GetObjectItemCaseSensitive(json_data, "GGA");
-        if (cJSON_IsString(gga_item) && (gga_item->valuestring != NULL)) {
-        printf("NTRIP: %s\n", gga_item->valuestring);
-        char *gga_in = gga_item->valuestring;
-         write(sckfd,gga_in, strlen(gga_in));
-         free(gga_in);
-       }
-    }
-     
-     
+     ntrip_gga(sckfd,"ntrip_gga.json");
     
     bzero(buffer, BUFFER_SIZE);
     int k =1;
     while(k>0){
     pthread_mutex_lock(&lock);
     while (((n = read(sckfd, buffer, BUFFER_SIZE - 1)) > 0) && (server != NULL)){
-     if (json_data != NULL) {
-        // Accessing a number item:
-       cJSON *json_data = parse_json_file("ntrip_gga.json"); // Example filename
-        cJSON *gga_item = cJSON_GetObjectItemCaseSensitive(json_data, "GGA");
-        if (cJSON_IsString(gga_item) && (gga_item->valuestring != NULL)) {
-        printf("NTRIP: %s\n", gga_item->valuestring);
-        char *gga_in = gga_item->valuestring;
-         write(sckfd,gga_in, strlen(gga_in));
-         free(gga_in);
-       }
-    }
-  
+    ntrip_gga(sckfd,"ntrip_gga.json");
      unsigned char* bytes = (unsigned char*)malloc(n);
     if (bytes == NULL) {
         perror("Failed to allocate memory");
@@ -98,6 +76,7 @@ void *serial_reader_thread(void *arg) {
 int hr,se,mi;
 char gnss_t[64];
 int res;
+FILE *fdf = gnss_log();
 int tim=0, dat=0,qua,nsati,diff_age,diff_sat;
 double lat,lng,spd,hd;
 float alti,hdop;
@@ -108,15 +87,17 @@ pthread_mutex_lock(&buffer_mutex);
 	while((res = read(fd, buf, sizeof(buf) - 1)) > 0){
 	buf[res]='\0';
 	if(verifyChecksum(buf)){
-	
 	if(strstr(buf,"$GNGGA")|| strstr(buf,"$GPGGA")){
 	NTRIP_json_to_file("ntrip_gga.json",buf);
 	}
-	
 	rmc_nmeaparser(buf,&tim,&valid,&lat,&ltdir,&lng,&lngdir,&spd,&hd,&dat,&fixt);
-	//gga_nmeaparser(buf,&tim,&lat,&ltdir,&lng,&lngdir,&qua,&nsati,&hdop,&alti,&diff_age,&diff_sat);
-	//printf("%d %c %f %c %f %c %f %f %d %c \r\n",tim,valid,lat,ltdir,lng,lngdir,spd,hd,dat,fixt);
+	gga_nmeaparser(buf,&tim,&lat,&ltdir,&lng,&lngdir,&qua,&nsati,&hdop,&alti,&diff_age,&diff_sat);
+	if(lat != 0.0 && lng != 0.0 && alti !=0.0 ){
+        convert_time_to_UTC((unsigned)tim,&hr,&mi,&se);
+        sprintf(gnss_t,"%02d:%02d:%02d",hr,mi,se);
+	write_json_to_file("dev.json",gnss_t,lat,lng,alti,hdop,spd,hd,qua,nsati,diff_age,dat,diff_sat);
 	usleep(5000);
+	}
    }
 }
 pthread_mutex_unlock(&buffer_mutex);
@@ -234,5 +215,20 @@ char *read_file(const char *filename) {
     return buffer; // The caller is responsible for freeing this memory
 }
 
+void ntrip_gga(int portd,const char* jsfi){
+     cJSON *json_data = parse_json_file(jsfi); // Example filename
+     if (json_data != NULL) {
+        // Accessing a number item:
+        cJSON *gga_item = cJSON_GetObjectItemCaseSensitive(json_data, "GGA");
+        if (cJSON_IsString(gga_item) && (gga_item->valuestring != NULL)) {
+        printf("NTRIP: %s\n", gga_item->valuestring);
+        char *gga_in = gga_item->valuestring;
+         write(portd,gga_in, strlen(gga_in));
+         //free(gga_in);
+       }
+    }
+    cJSON_Delete(json_data);
+    
+}
 
 
