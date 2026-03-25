@@ -66,7 +66,7 @@ return rd;
 }
 
 FILE *gnss_log(){
-
+char filename[100];
  time_t current_time;
     struct tm *local_time_info;
 
@@ -84,8 +84,14 @@ FILE *gnss_log(){
 
     //printf("Current local time: %s\n", time_string);
 
-    char filename[100];
+    
     sprintf(filename,"log_%s.json", time_string);
+    for(int b=0; b<strlen(filename); b+=1){
+    if(filename[b] == ' '){
+       filename[b] = '_';
+       }
+    }
+    
     FILE *file = fopen(filename, "w");
     if (file == NULL) {
         fprintf(stderr, "Could not open %s for writing\n", filename);
