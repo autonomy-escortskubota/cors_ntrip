@@ -13,7 +13,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #define BAUDRATE B115200
-#define DEVICE "/dev/ttyUSB0"
+#define DEVICE "/dev/ttyS0"
 #define BUFSIZE 256
 #define PORT 2101
 #define BUFFER_SIZE 4096

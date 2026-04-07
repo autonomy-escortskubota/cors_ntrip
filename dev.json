@@ -1,14 +1,14 @@
 {
-	"Time":	"10:06:51",
-	"Latitude":	28.432832717895508,
-	"Longitude":	77.306526184082031,
-	"Altitude":	227.47000122070312,
-	"Head":	358.73,
-	"Speed":	0.01,
-	"HDOP":	1.2300000190734863,
-	"Quality":	1,
-	"Number of Satellite":	23,
-	"Differential Age":	0,
-	"Date":	310326,
-	"NTRIP Station ID":	0
+	"Time":	"17:06:50",
+	"Latitude":	28.429141998291016,
+	"Longitude":	77.415512084960938,
+	"Altitude":	180.0570068359375,
+	"Head":	322.39,
+	"Speed":	0.02,
+	"HDOP":	0.38999998569488525,
+	"Quality":	4,
+	"Number of Satellite":	79,
+	"Differential Age":	1,
+	"Date":	60426,
+	"NTRIP Station ID":	112
 }

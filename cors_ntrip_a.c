@@ -76,7 +76,7 @@ void *serial_reader_thread(void *arg) {
 int hr,se,mi;
 char gnss_t[64];
 int res;
-FILE *fdf = gnss_log();
+//FILE *fdf = gnss_log();
 int tim=0, dat=0,qua,nsati,diff_age,diff_sat;
 double lat,lng,spd,hd;
 float alti,hdop;
@@ -96,7 +96,7 @@ pthread_mutex_lock(&buffer_mutex);
 	if(lat != 0.0 && lng != 0.0 && alti !=0.0 ){
         convert_time_to_UTC((unsigned)tim,&hr,&mi,&se);
         sprintf(gnss_t,"%02d:%02d:%02d",hr,mi,se);
-	write_json_to_file("dev.json",gnss_t,lat,lng,alti,hdop,spd,hd,qua,nsati,diff_age,dat,diff_sat);
+	//write_json_to_file("dev.json",gnss_t,lat,lng,alti,hdop,spd,hd,qua,nsati,diff_age,dat,diff_sat);
 	usleep(5000);
 	}
    }
@@ -153,8 +153,6 @@ void write_gga_to_file(const char *filename, char *gga)
     FILE *file = fopen(filename, "w");
     if (file == NULL) {
         perror("Error opening GGA file");
-
-        return;
     }
 
     fprintf(file, "%s", gga);
@@ -172,7 +170,7 @@ char* read_gga_from_file(const char *filename)
     FILE *file = fopen(filename, "r");
     if (file == NULL) {
 
-        return NULL;
+        perror("Error opening GGA file");
     }
 
     static char buffer[256];
@@ -191,11 +189,26 @@ char* read_gga_from_file(const char *filename)
 //            SEND GGA TO NTRIP
 // =====================================================
 void ntrip_gga(int sockfd, const char *filename)
-{
-    char *gga = read_gga_from_file(filename);
+{   
+    char bu[256]={'\0'};
+   // char *gga = read_gga_from_file(filename);
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
 
-    if (gga != NULL) {
-        printf("NTRIP GGA: %s\n", gga);
-        write(sockfd, gga, strlen(gga));
+        perror("Error opening GGA file");
     }
+
+
+    if (fgets(bu, sizeof(bu), file) == NULL) {
+        fclose(file);
+
+        perror("Error opening GGA file");
+    }
+
+    fclose(file);
+
+    if (bu != NULL) {
+        printf("NTRIP GGA: %s\n", bu);
+        write(sockfd, bu, sizeof(bu));
+    }//    free(gga);
 }

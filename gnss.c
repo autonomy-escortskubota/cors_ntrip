@@ -130,7 +130,7 @@ cJSON *monitor = cJSON_CreateObject();
     } else {
         perror("Error opening file");
     }
-    fprintf(file, "%s", json_string);
+    //fprintf(file, "%s", json_string);
     
 
     
